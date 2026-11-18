@@ -15,6 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCAFFOLD = os.path.join(HERE, "scaffold_plan.py")
 CHECK = os.path.join(HERE, "check_plan.py")
 RENDER = os.path.join(HERE, "render_html.py")
+INIT = os.path.join(HERE, "init_tables.py")
 
 GOOD = """# 社区亲子坊（示例）
 
@@ -218,6 +219,35 @@ def main():
         ok = ok and r2.returncode == 0
     results.append(case("8 模式 C 资源建档骨架通过校验", ok,
                         (r2.stdout[-200:] if ok else r.stderr[:200])))
+
+    # 用例 9：底座表初始化（auto 先试 Excel，缺库落 MD；另验 MD 兜底）
+    init_base = os.path.join(tmp, "底座表")
+    r = run([sys.executable, INIT, "--out", init_base, "--format", "auto"])
+    xlsx_path = init_base + ".xlsx"
+    md_path = init_base + ".md"
+    ok = r.returncode == 0
+    if os.path.exists(xlsx_path):
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(xlsx_path)
+            names = [ws.title for ws in wb.worksheets]
+            archive = next(ws for ws in wb.worksheets if ws.title == "活动档案表")
+            resource = next(ws for ws in wb.worksheets if ws.title == "外联资源库表")
+            ok = ok and len(names) == 2 and archive.max_column == 24 and resource.max_column == 22
+        except ImportError:
+            ok = ok and os.path.exists(md_path)
+    else:
+        ok = ok and os.path.exists(md_path)
+    r_md = run([sys.executable, INIT, "--out", os.path.join(tmp, "底座表md"), "--format", "md"])
+    md2 = os.path.join(tmp, "底座表md.md")
+    if os.path.exists(md2):
+        with open(md2, "r", encoding="utf-8") as f:
+            md_text = f.read()
+        ok = ok and r_md.returncode == 0 and "活动档案表" in md_text and "外联资源库表" in md_text
+    else:
+        ok = False
+    results.append(case("9 底座表初始化（Excel/MD 兜底）通过", ok,
+                        (r.stderr[:200] or r_md.stderr[:200])))
 
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
