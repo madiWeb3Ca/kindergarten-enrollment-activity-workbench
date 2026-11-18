@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.0.0
+version: 1.0.1
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, HTML]
@@ -115,6 +115,7 @@ description: "策划、落表、复盘幼儿园招生与社区外联活动。核
 **默认交付 HTML 方案卡**：单文件、不依赖外部资源，双击可读、可打印存 PDF；同时保留一份 `.md` 底稿供版本库比对。
 
 ```bash
+python scripts/init_tables.py --out ./tables_out   # 初始化两张底座表（先试 Excel，缺库落 MD）
 python scripts/scaffold_plan.py --title "社区亲子坊" --layer P1 --window 长期蓄水 --kind single --mode 走出去 --goal 留资
 python scripts/render_html.py 方案卡.md            # 生成同名 .html
 python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验；--kind series/resource 走各自模板
@@ -141,9 +142,19 @@ python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验�
 
 字段骨架与分级规则见 `tables/activity-archive.md`、`tables/outreach-resource.md`、`references/review-loop.md`；资源建档骨架由 `scaffold_plan.py --kind resource` 生成。
 
+### 底座表初始化（三级降级，工具自动完成）
+
+两张底座表由工具按环境能力逐级尝试初始化，**不把建表、配字段、调关联派给使用者手工完成**：
+
+1. **在线多维表格（首选）**：环境具备豆包内置多维表格能力时，AI 先查项目空间是否已有这两张表；没有就按 `tables/` 骨架直接新建，字段、单选选项、表间关联一次配完。
+2. **本地 Excel（兜底一）**：环境不支持在线表时，由 `scripts/init_tables.py --format xlsx` 生成本地 `.xlsx` 工作簿，两张 sheet 对应两张表，表头与选项落好。
+3. **MD 文本（兜底二）**：Excel 也生成不了时，`init_tables.py --format md` 输出 Markdown 表结构文本，供后续导入或誊录。
+
+环境暂不具备建表能力时，如实标注当前产物形态，不转成手工建表任务。
+
 ### 录入与回流规则
 
-1. **就地录入**：谁用 skill 跑这场活动，谁在自己库里建档（本场档案＋本场接触的资源条目）；skill 出骨架初稿，人确认事实后落库。
+1. **自动建表、人工确认**：底座表由工具按上面三级路径初始化；每场活动/每个场所的回填条目由 AI 出初稿，人只核对时间、地点、联系人、费用、师资、名额后落库。
 2. **母版回流**：成品方案、有效打法、复盘结论回交母版；个人库是工作区，母版是汇总正本；第一阶段先各自就地录，跑一段时间后人工汇总去重分级。
 3. **读取跟随**：参考历史活动或合作资源，去对方库或母版读；既有招生工作台与意向台账原样不动，需要时只读这两张新表。
 4. **编码关联**：档案、资源条目、线索段挂场次编码/场所编码；不靠复制粘贴保持一致。
@@ -187,6 +198,7 @@ python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验�
 - `examples/community-parent-child.md`——完整示例：某社区亲子坊走出去＋园内体验课两场链路（通用演示示例，待核项占位）
 - `examples/mall-pop-up.md`——完整示例：某商场周末快闪体验角（流动客流循环制，区别于社区场；通用演示示例，待核项占位）
 - `scripts/scaffold_plan.py`——按入口卡生成骨架：`--kind single` 方案卡／`series` 排期表／`resource` 资源建档（默认出 HTML，`--format md` 出底稿）
+- `scripts/init_tables.py`——初始化两张底座表：在线表之外的本地兜底，`--format xlsx` 出本地 Excel、`--format md` 出表结构文本
 - `scripts/render_html.py`——把方案卡 Markdown 渲染成单文件 HTML
 - `scripts/check_plan.py`——结构校验与红线检测（.md 与 .html 都支持）
 - `scripts/selftest.py`——冒烟测试用例
