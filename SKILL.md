@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.1.0
+version: 1.1.1
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, HTML]
