@@ -1,0 +1,7 @@
+interface:
+  display_name: "幼儿园招生活动工作台"
+  short_description: "按八步路径策划招生与社区外联活动，产出方案卡、留资留痕与复盘回流"
+  default_prompt: "使用 $enrollment-activity-workbench 帮我策划一场……"
+
+policy:
+  allow_implicit_invocation: true
