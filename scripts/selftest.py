@@ -7,15 +7,31 @@
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCAFFOLD = os.path.join(HERE, "scaffold_plan.py")
 CHECK = os.path.join(HERE, "check_plan.py")
 RENDER = os.path.join(HERE, "render_html.py")
 INIT = os.path.join(HERE, "init_tables.py")
+SKILL_MD = os.path.join(HERE, "..", "SKILL.md")
+
+
+def skill_version():
+    """从 SKILL.md frontmatter 读取版本号；读不到时返回占位，不阻断自测。"""
+    try:
+        with open(SKILL_MD, "r", encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^version:\s*([^\s#]+)", line)
+                if m:
+                    return m.group(1)
+    except OSError:
+        pass
+    return "未知版本"
 
 GOOD = """# 社区亲子坊（示例）
 
@@ -129,6 +145,7 @@ def case(name, cond, detail=""):
 
 
 def main():
+    print(f"=== 技能版本 {skill_version()}｜自测日期 {date.today().isoformat()} ===")
     results = []
     tmp = tempfile.mkdtemp(prefix="eaw_selftest_")
 
