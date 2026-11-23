@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.1.1
+version: 1.1.2
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, HTML]
@@ -134,7 +134,7 @@ description: "策划、落表、复盘幼儿园招生与社区外联活动。核
 python scripts/init_tables.py --out ./tables_out   # 初始化两张底座表（先试 Excel，缺库落 MD）
 python scripts/scaffold_plan.py --title "社区亲子坊" --layer P1 --window 长期蓄水 --kind single --mode 走出去 --goal 留资
 python scripts/render_html.py 方案卡.md            # 生成同名 .html
-python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验；--kind series/resource 走各自模板
+python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验；排期表/资源建档由脚本自动识别走各自模板
 ```
 
 校验项：八步要素（含量力校验）是否齐全、入口卡是否定清、是否出现未核实数字/承诺性表述、留资字段是否瘦身、降级预案是否留位。有告警先改再交付。
