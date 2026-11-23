@@ -1,6 +1,6 @@
 # 幼儿园招生活动工作台（kindergarten-enrollment-activity-workbench）
 
-> 按八步思考路径带园所策划招生与社区外联活动，产出可落地的活动方案卡、留资留痕方案与复盘回流记录。内核是**可教的思考过程＋自循环迭代**，不是案例库，也不是填好的现成模板。
+> 按八步思考路径带园所策划招生与社区外联活动，主动推荐动作与创意、跨行业借鉴策略、临场突发应变分支，产出可落地的活动方案卡、留资留痕方案与复盘回流记录。内核是**可教的思考过程＋自循环迭代**，不是案例库，也不是填好的现成模板。
 
 ## 一、适用与不适用
 
@@ -24,6 +24,9 @@ kindergarten-enrollment-activity-workbench/
 │   ├── inventory-drawers.md    # 第②步：家底六抽屉、转化三问、数据参照口径
 │   ├── activity-prototypes.md  # 第③步：主干原型种子、选型对照、改造原则
 │   ├── playbooks.md           # 各原型打法手册：流程样板、抓手、留资插入点、物料分级、兜底
+│   ├── proactive-playbook.md  # 主动推荐引擎与创意总监工作法：菜单三段式、提案卡、候选池
+│   ├── cross-industry-playbook.md # 跨行业策略借鉴库：三档大胆度、分行业种子映射、排除清单
+│   ├── contingency-playbook.md # 临场应变分支库：五组场景、六层接法、顺势加分动作
 │   ├── plan-framework.md       # 第④⑤步：方案骨架、筹备倒排、当天 checklist、量力校验、降级预案
 │   ├── lead-capture.md         # 第⑥步：两码分工、表单规格、跟进 SOP、归因映射、漏斗指标
 │   ├── review-loop.md          # 第⑦⑧步：复盘三问、回流去向、分级规则
