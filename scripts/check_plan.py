@@ -160,6 +160,27 @@ def main():
         if risk and "降级" not in risk:
             warnings.append("风险预案段未留降级预案档位（撑不住时按顺序砍环节/规模）")
 
+        # 2d. 年龄层与活动形式错配（软警告；边界/否定语境不误报）
+        layer_m = re.search(r"P([0-4])", entry)
+        if layer_m:
+            layer = layer_m.group(1)
+            if layer == "2":
+                for line in text.splitlines():
+                    if re.search(r"探园日|开放日", line) and not in_negative_context(line, []):
+                        warnings.append("P2 托班/亲子层通常承接低龄亲子体验；探园日/开放日更偏 P0 择园，核对活动形式是否与年龄层错配")
+                        break
+            if layer == "0":
+                for line in text.splitlines():
+                    if re.search(r"托班体验|亲子班体验", line) and not in_negative_context(line, []):
+                        warnings.append("P0 择园层通常承接探园日/开放日/体验课；托班/亲子体验更偏 P2，核对是否错配")
+                        break
+
+        # 2e. 留资段挂场次编码（软警告，便于归因到具体场次）
+        lead_body = bodies.get("留资与落表", "")
+        if lead_body and re.search(r"活码|表单|留资|邀约码", lead_body):
+            if not re.search(r"场次编码|场次编号|\d{4}Q\d", text):
+                warnings.append("留资线索建议挂场次编码（YYYYQX-场所简称-序号），便于归因到具体场次")
+
     # 3. 承诺性红线
     for pat in PROMISE_PATTERNS:
         m = re.search(pat, text)
