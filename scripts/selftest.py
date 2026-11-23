@@ -56,6 +56,11 @@ GOOD = """# 社区亲子坊（示例）
 - 参考样子：社区亲子绘本坊
 - 本场变形点：低龄安静环节，分段答疑
 
+## 三补、推荐动作与本场亮点
+
+- 首选动作：绘本共读打底，旁观位开放给犹豫家庭
+- 超预期亮点：孩子作品自愿留影；对照应变库高频条目预读临场分支
+
 ## 四、手里有什么（周边）
 
 | 项 | 口径 | 状态 |
@@ -175,7 +180,7 @@ def main():
         with open(out, "r", encoding="utf-8") as f:
             content = f.read()
         sections = ["先定招谁", "现成样子", "搭出本场", "物料", "掂量",
-                    "风险预案", "当天怎么留", "回头看"]
+                    "风险预案", "推荐动作", "当天怎么留", "回头看"]
         ok = all(s in content for s in sections)
         r = run([sys.executable, CHECK, out])
         ok = ok and r.returncode != 2
@@ -250,7 +255,7 @@ def main():
             names = [ws.title for ws in wb.worksheets]
             archive = next(ws for ws in wb.worksheets if ws.title == "活动档案表")
             resource = next(ws for ws in wb.worksheets if ws.title == "外联资源库表")
-            ok = ok and len(names) == 2 and archive.max_column == 24 and resource.max_column == 22
+            ok = ok and len(names) == 2 and archive.max_column == 26 and resource.max_column == 22
         except ImportError:
             ok = ok and os.path.exists(md_path)
     else:
