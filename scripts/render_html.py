@@ -82,15 +82,29 @@ def render_table(lines):
 
 
 def render_list(lines):
-    items = []
+    """按行序渲染：列表项进 ul，普通段落进 p，三级标题进 h3；不在列表时丢弃段落。"""
+    out, items = [], []
+
+    def flush():
+        if items:
+            out.append("<ul>" + "".join(f"<li>{inline(x)}</li>" for x in items) + "</ul>")
+            items.clear()
+
     for l in lines:
+        if not l.strip():
+            continue
+        h3 = re.match(r"^\s*###\s+(.*)$", l)
         m = re.match(r"^\s*(?:\d+[.、]\s*|-\s+|\*\s+)(.*)$", l)
-        if m and m.group(1).strip():
+        if h3:
+            flush()
+            out.append(f"<h3>{inline(h3.group(1).strip())}</h3>")
+        elif m and m.group(1).strip():
             items.append(m.group(1).strip())
-    if not items:
-        body = "".join(f"<p>{inline(re.sub(r'^\\s*-\\s*', '', l))}</p>" for l in lines if l.strip())
-        return body or '<p class="muted">（未填写）</p>'
-    return "<ul>" + "".join(f"<li>{inline(x)}</li>" for x in items) + "</ul>"
+        else:
+            flush()
+            out.append(f"<p>{inline(re.sub(r'^\\s*-\\s*', '', l).strip())}</p>")
+    flush()
+    return "".join(out) or '<p class="muted">（未填写）</p>'
 
 
 def render_section(name, lines):
@@ -139,6 +153,7 @@ h1{font-family:Georgia,"Noto Serif SC","Source Han Serif SC",serif;font-size:26p
 section{margin-top:22px}
 h2{font-family:Georgia,"Noto Serif SC","Source Han Serif SC",serif;font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:9px;color:var(--theme-main-deep)}
 h2::before{content:"";width:4px;height:16px;background:var(--theme-accent);border-radius:2px;display:inline-block}
+h3{font-size:15px;margin:12px 0 6px;color:var(--theme-main-deep)}
 ul{margin:0;padding-left:0;list-style:none}
 ul li{position:relative;padding-left:17px;margin:5px 0}
 ul li::before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--theme-accent)}
