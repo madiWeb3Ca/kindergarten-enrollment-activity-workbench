@@ -23,8 +23,9 @@ kindergarten-enrollment-activity-workbench/
 │   ├── coaching-scripts.md     # 八步教练式引导话术与追问链
 │   ├── inventory-drawers.md    # 第②步：家底六抽屉、转化三问、数据参照口径
 │   ├── activity-prototypes.md  # 第③步：主干原型种子、选型对照、改造原则
-│   ├── plan-framework.md       # 第④⑤步：方案骨架、量力校验、降级预案
-│   ├── lead-capture.md         # 第⑥步：两码分工、表单规格、归因映射、漏斗指标
+│   ├── playbooks.md           # 各原型打法手册：流程样板、抓手、留资插入点、物料分级、兜底
+│   ├── plan-framework.md       # 第④⑤步：方案骨架、筹备倒排、当天 checklist、量力校验、降级预案
+│   ├── lead-capture.md         # 第⑥步：两码分工、表单规格、跟进 SOP、归因映射、漏斗指标
 │   ├── review-loop.md          # 第⑦⑧步：复盘三问、回流去向、分级规则
 │   ├── red-lines.md            # 红线、事实检索、隐私合规与能力边界
 │   ├── faq.md                  # 常见问题集中答疑
