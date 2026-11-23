@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.1.2
+version: 1.2.0
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, HTML]
@@ -108,7 +108,7 @@ description: "策划、落表、复盘幼儿园招生与社区外联活动。核
 
 ### 第④步 搭出本场方案
 
-按方案九要素逐项落定：场地、环节结构、流程时长、物料、分工、预算、时段、风险预案、两场链路（先走出去留资，再请进来体验/探园）。要素标准与正反例见 `references/plan-framework.md`。
+按方案九要素逐项落定：场地、环节结构、流程时长、物料、分工、预算、时段、风险预案、两场链路（先走出去留资，再请进来体验/探园）。要素标准、筹备倒排与当天执行 checklist 见 `references/plan-framework.md`；各原型可照办的标准打法包（流程样板、环节抓手、留资插入点、物料分级、翻车兜底）见 `references/playbooks.md`。
 
 ### 第⑤步 掂量够不够做
 
@@ -116,7 +116,7 @@ description: "策划、落表、复盘幼儿园招生与社区外联活动。核
 
 ### 第⑥步 当天怎么留线索
 
-定两码分工（留资活码／探园邀约码，不重复收集信息）、现场三分支（当场敲定／回家扫码／长期维护）、表单字段瘦身与落表映射、漏斗留痕指标。规则见 `references/lead-capture.md`。
+定两码分工（留资活码／探园邀约码，不重复收集信息）、现场三分支（当场敲定／回家扫码／长期维护）、表单字段瘦身与落表映射、漏斗留痕指标；离场后跟进 SOP（24h 内首触达、3 日复联、沉默池唤醒与起步句）。规则见 `references/lead-capture.md`。
 
 ### 第⑦步 回头看效果
 
@@ -203,8 +203,9 @@ python scripts/check_plan.py 方案卡.html          # md 与 html 都能校验�
 - `references/coaching-scripts.md`——首启导航卡＋八步教练式引导话术：首问句、追问链、答不全兜底，分步小卡一次一个决策点
 - `references/inventory-drawers.md`——第②步：六类资源抽屉、转化三问、提问链条、家底边界
 - `references/activity-prototypes.md`——第③步：三类主干原型种子、适用条件、改造原则
-- `references/plan-framework.md`——第④⑤步：九要素方案骨架、量力校验表、降级预案
-- `references/lead-capture.md`——第⑥步：两码分工、现场三分支、字段瘦身映射、落表规则、漏斗指标
+- `references/playbooks.md`——各原型打法手册：标准流程样板、环节抓手、留资邀约插入点、物料分级、人手参照区间、翻车点与兜底
+- `references/plan-framework.md`——第④⑤步：九要素方案骨架、筹备倒排 SOP、当天执行 checklist、量力校验表、降级预案
+- `references/lead-capture.md`——第⑥步：两码分工、现场三分支、离场后跟进 SOP、字段瘦身映射、落表规则、漏斗指标
 - `references/review-loop.md`——第⑦⑧步：复盘三问、回流去向、两表归属、分级规则
 - `references/red-lines.md`——红线清单、事实检索规则、隐私与合规边界
 - `references/faq.md`——常见问题集中答疑：入口人群、两码留资、方案原型、周边候选取数、数据边界
