@@ -17,7 +17,7 @@ kindergarten-enrollment-activity-workbench/
 ├── SKILL.md                    # 技能主文件：定位、三模式、八步路径、硬规则、资源索引
 ├── README.md                   # 本文件（安装与上手说明）
 ├── CHANGELOG.md                # 版本变更记录
-├── LICENSE                     # 许可协议（CC-BY-NC-SA-4.0）
+├── LICENSE                     # 许可协议（CC-BY-NC-SA-4.0）；源仓为 LICENSE，SkillHub 发布副本改名 LICENSE.md
 ├── references/                 # 备课与规则参考（AI 按需读取）
 │   ├── entry-layers.md         # 第①步：年龄分层、政策口径、窗口节奏、产品边界
 │   ├── coaching-scripts.md     # 八步教练式引导话术与追问链
@@ -37,6 +37,7 @@ kindergarten-enrollment-activity-workbench/
 │   └── mall-pop-up.md / .html
 ├── scripts/
 │   ├── scaffold_plan.py        # 生成骨架：single / series / resource
+│   ├── init_tables.py          # 初始化两张底座表：在线表之外的本地兜底（xlsx / md）
 │   ├── render_html.py          # 方案卡 Markdown → 单文件 HTML
 │   ├── check_plan.py           # 结构校验与红线检测（.md / .html 双通道）
 │   └── selftest.py              # 冒烟测试用例
@@ -50,7 +51,7 @@ kindergarten-enrollment-activity-workbench/
 1. 将本目录整体放入技能加载目录（或按所在平台的技能安装方式上传）。
 2. 确认 `SKILL.md` 与 `scripts/`、`references/` 同级，目录结构未拆散。
 3. 在对话中提到"招生活动、社区活动、探园日、体验课、异业合作、留资复盘、社区资源库"等即可触发；也可手动调用。
-4. 脚本依赖 Python 3；无需安装第三方库，标准库即可运行。
+4. 脚本依赖 Python 3；核心脚本仅用标准库。生成本地 Excel 兜底表可选装 openpyxl，未装时自动降级为 Markdown 表结构，不影响主流程。
 
 ## 四、快速上手
 
@@ -69,6 +70,9 @@ python scripts/scaffold_plan.py --title "2027 春季排期" --window 春季 --ki
 
 # 外联资源建档
 python scripts/scaffold_plan.py --title "某社区活动中心" --kind resource
+
+# 初始化两张底座表（先试 Excel，缺 openpyxl 自动落 MD）
+python scripts/init_tables.py --out ./tables_out
 
 # 出纯文本底稿
 python scripts/scaffold_plan.py --title "社区亲子坊" --format md
