@@ -61,9 +61,6 @@ def parse(md):
 
 def render_table(lines):
     rows = [l.strip() for l in lines if l.strip().startswith("|")]
-    if not rows:
-        body = "".join(f"<p>{inline(re.sub(r'^\\s*-\\s*', '', l))}</p>" for l in lines if l.strip())
-        return body or '<p class="muted">（未填写）</p>'
     data = []
     for r in rows:
         cells = [c.strip() for c in r.strip("|").split("|")]
@@ -78,12 +75,7 @@ def render_table(lines):
         "<tr>" + "".join(f"<td>{inline(c)}</td>" for c in row) + "</tr>"
         for row in body
     )
-    table_html = f"<table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>"
-    # 混合章节：表格前后的 bullet / 三级标题 / 段落不丢弃，先渲染为列表或段落
-    non_rows = [l for l in lines if not l.strip().startswith("|")]
-    if non_rows and any(l.strip() for l in non_rows):
-        return render_list(non_rows) + table_html
-    return table_html
+    return f'<div class="table-wrap"><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table></div>'
 
 
 def render_list(lines):
@@ -112,23 +104,43 @@ def render_list(lines):
     return "".join(out) or '<p class="muted">（未填写）</p>'
 
 
+def split_blocks(lines):
+    """按行序把一章切成有序块：连续表格行成一个 table 块，其余成 text 块。"""
+    blocks = []
+    cur_kind, cur = None, []
+
+    def flush():
+        nonlocal cur_kind, cur
+        if cur:
+            # 纯空行形成的 text 块直接丢弃，避免表格前后冒出“（未填写）”占位
+            if cur_kind == "table" or any(x.strip() for x in cur):
+                blocks.append((cur_kind, cur))
+            cur = []
+
+    for l in lines:
+        kind = "table" if l.strip().startswith("|") else "text"
+        if cur_kind is None:
+            cur_kind = kind
+        if kind != cur_kind:
+            flush()
+            cur_kind = kind
+        cur.append(l)
+    flush()
+    return blocks
+
+
 def render_section(name, lines):
-    if any(k in name for k in ["场地", "流程", "物料", "分工", "留资", "落表", "家底", "原型", "风险", "复盘",
-                               "手里有什么", "现成样子", "搭出本场", "掂量", "当天怎么留", "回头看"]):
-        if any(l.strip().startswith("|") for l in lines):
-            return render_table(lines)
-    if any(k in name for k in ["待核实", "清单", "延伸", "回流", "存下下次"]):
-        return render_list(lines)
-    if any(l.strip().startswith("|") for l in lines):
-        return render_table(lines)
-    return render_list(lines)
+    out = []
+    for kind, block in split_blocks(lines):
+        out.append(render_table(block) if kind == "table" else render_list(block))
+    return "".join(out)
 
 
 # ---------- 整页模板 ----------
 
 CSS = """
 :root{
-  --wf-red:#3F5C50; --wf-red-deep:#2E453C; --wf-gold:#A99B7E; --wf-gold-deep:#7E7259;
+  --wf-red:#9B1C2C; --wf-red-deep:#7A1420; --wf-gold:#C9A227; --wf-gold-deep:#8A6D1A;
   --wf-paper:#FAF6EE; --wf-ink:#2B2620; --wf-gray:#6B5F52; --line:#ddd3c4;
   --todo:#fff3c4;
 }
@@ -162,6 +174,8 @@ h3{font-size:15px;margin:12px 0 6px;color:var(--wf-red-deep)}
 ul{margin:0;padding-left:0;list-style:none}
 ul li{position:relative;padding-left:17px;margin:5px 0}
 ul li::before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--wf-gold)}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-wrap table{min-width:460px}
 table{width:100%;border-collapse:collapse;font-size:14px;break-inside:avoid;page-break-inside:avoid}
 th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 th{background:var(--wf-paper);font-weight:600;color:var(--wf-red-deep)}
@@ -180,6 +194,8 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid var(--line);font-si
   section{margin-top:13px}
   h2{font-size:15px;margin-bottom:7px}
   table{font-size:12.5px}
+  .table-wrap{overflow:visible}
+  .table-wrap table{min-width:0}
   th,td{padding:5px 8px}
   footer{margin-top:14px;padding-top:7px}
 }
