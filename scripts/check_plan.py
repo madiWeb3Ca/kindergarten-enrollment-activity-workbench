@@ -28,6 +28,25 @@ REQUIRED_SECTIONS = [
     ("复盘与回流", r"^\s*#+\s*.*(复盘|回流|回头看|存下下次)"),
 ]
 
+# 方案卡标准章节顺序（与 plan-framework.md 第〇节一致），用于顺序校验。
+# 仅在标题行（# 开头）匹配，避免正文里的同名词误判。
+STANDARD_SECTION_ORDER = [
+    ("入口与目标", r"(先定招谁|入口与目标|定入口)"),
+    ("自家家底", r"手里有什么（自家|自家家底"),
+    ("周边场地", r"手里有什么（周边"),
+    ("供需交换象限", r"供需交换象限|供需"),
+    ("原型选择", r"找个现成样子|原型选择|选原型"),
+    ("流程环节", r"搭出本场方案|流程环节"),
+    ("物料与分工", r"物料与分工"),
+    ("量力校验", r"掂量够不够做|量力校验"),
+    ("预算", r"预算"),
+    ("风险预案", r"风险预案"),
+    ("推荐动作与亮点", r"推荐动作"),
+    ("留资与落表", r"当天怎么留线索|留资"),
+    ("复盘与回流", r"回头看|复盘|回流"),
+    ("待核实清单", r"待核实清单"),
+]
+
 # 产物类型识别：单场方案卡 / 执行手册 / 系列排期表 / 资源建档骨架
 def detect_kind(text, path=""):
     base = os.path.basename(path) if path else ""
@@ -113,6 +132,91 @@ def find_section(text, pattern):
     return -1, ""
 
 
+def check_section_order(text):
+    """按标准骨架核对标题行出现顺序，乱序返回错误信息。
+
+    按标准顺序逐个定位章节第一个标题行，再比较实际行号是否单调递增；
+    缺失章节由「章节齐全」逻辑另报，这里只对实际找到的章节判顺序。
+    """
+    lines = text.splitlines()
+    located = []  # (标准序号, 名称, 行号)
+    for order_idx, (name, pat) in enumerate(STANDARD_SECTION_ORDER):
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*#+\s", line) and re.search(pat, line):
+                located.append((order_idx, name, i))
+                break
+
+    order_errors = []
+    prev_line, prev_name = -1, ""
+    for order_idx, name, ln in located:
+        if ln < prev_line:
+            order_errors.append(
+                f"章节顺序颠倒：「{prev_name}」应在「{name}」之前；"
+                "标准顺序见 plan-framework.md 第〇节，不得调换章节顺序"
+            )
+        prev_line, prev_name = ln, name
+    return order_errors
+
+
+def _section_lines(text):
+    """返回 (行列表, {章节键: 标题行号})，按标准骨架正则在标题行匹配。"""
+    lines = text.splitlines()
+    located = {}
+    for name, pat in STANDARD_SECTION_ORDER:
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*#+\s", line) and re.search(pat, line):
+                located[name] = i
+                break
+    return lines, located
+
+
+def check_prototype_forward_ref(lines, located):
+    """前置引用：原型章（5）不得出现第六章才定义的“第 N 站”站点编号。"""
+    proto = located.get("原型选择")
+    flow = located.get("流程环节")
+    if proto is None or flow is None:
+        return []
+    for i in range(proto + 1, flow):
+        if re.search(r"第\s*\d+\s*站", lines[i]):
+            return ["原型章（5）出现第六章才定义的站点编号“第 N 站”；经验依据按通用接触环节列，站点定义归第六章"]
+    return []
+
+
+def check_conclusion_before_risk(lines, located):
+    """结论后置：可行性结论不得出现在风险预案章（10）之前。"""
+    risk = located.get("风险预案")
+    if risk is None:
+        return []
+    concl = re.compile(r"能不能做|补缺口后可执行|结论[:：]\s*可执行|可行性结论[:：]\s*[^见在指]")
+    for i in range(0, risk):
+        if concl.search(lines[i]):
+            return ["可行性结论应放在预算、风险与降级之后；第八章只列缺口，不在风险预案前下“能不能做”结论"]
+    return []
+
+
+# 内容传播指标：只属于“官方号视频怎么传播”的调研，不能当活动设计同业依据
+CONTENT_METRIC_PATTERN = (
+    r"三平台|官方号|点赞|收藏|播放|涨粉|粉丝|爆款|视频号|抖音|小红书"
+)
+
+
+def check_content_metric_in_prototype(lines, located):
+    """同业依据边界：原型章（5）同业列不得出现内容传播指标。"""
+    proto = located.get("原型选择")
+    flow = located.get("流程环节")
+    if proto is None or flow is None:
+        return []
+    for i in range(proto + 1, flow):
+        line = lines[i]
+        m = re.search(CONTENT_METRIC_PATTERN, line)
+        if m and not in_negative_context(line, []):
+            return [
+                "原型章（5）同业依据出现内容传播指标“三平台/官方号/点赞/收藏/播放/涨粉”等；"
+                "同业依据只能引用真实活动案例，内容传播调研归视频/内容那条线，不得作为活动设计依据"
+            ]
+    return []
+
+
 def main():
     parser = argparse.ArgumentParser(description="校验招生活动方案卡")
     parser.add_argument("path", help="方案卡文件（.md 或 .html）")
@@ -155,6 +259,16 @@ def main():
                 errors.append(f"缺少必需段落「{name}」")
             else:
                 bodies[name] = body
+
+        # 1b. 章节顺序校验（固定骨架，乱序即错误）
+        errors.extend(check_section_order(text))
+
+        # 1c. 前置引用与结论后置（软警告，防补丁）
+        _lines, _located = _section_lines(text)
+        warnings.extend(check_prototype_forward_ref(_lines, _located))
+        warnings.extend(check_conclusion_before_risk(_lines, _located))
+        # 1d. 同业依据边界：内容传播指标不得混入同业依据（软警告）
+        warnings.extend(check_content_metric_in_prototype(_lines, _located))
 
         # 2. 入口卡是否定清
         entry = bodies.get("入口与目标", "")
