@@ -263,7 +263,7 @@ def main():
         # 1b. 章节顺序校验（固定骨架，乱序即错误）
         errors.extend(check_section_order(text))
 
-        # 1c. 前置引用与结论后置（软警告，防补丁）
+        # 1c. 前置引用与结论后置（软警告，防补丁堆积）
         _lines, _located = _section_lines(text)
         warnings.extend(check_prototype_forward_ref(_lines, _located))
         warnings.extend(check_conclusion_before_risk(_lines, _located))
