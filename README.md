@@ -40,10 +40,11 @@ kindergarten-enrollment-activity-workbench/
 │   ├── community-parent-child.md / .html
 │   └── mall-pop-up.md / .html
 ├── scripts/
-│   ├── scaffold_plan.py        # 生成骨架：single / series / resource
+│   ├── scaffold_plan.py        # 生成骨架：single 方案卡 / manual 执行手册 / series 排期表 / resource 建档
 │   ├── init_tables.py          # 初始化两张底座表：在线表之外的本地兜底（xlsx / md）
 │   ├── render_html.py          # 方案卡 Markdown → 单文件 HTML
-│   ├── check_plan.py           # 结构校验与红线检测（.md / .html 双通道）
+│   ├── check_plan.py           # 单文件结构校验与红线检测（.md / .html 双通道）
+│   ├── check_deliverables.py   # 目录级产物齐套检查：方案卡 HTML/MD 底稿/执行手册缺件告警
 │   └── selftest.py              # 冒烟测试用例
 ├── tests/
 │   └── selftest-output.txt      # 最近一次自测与示例校验存档
@@ -61,7 +62,7 @@ kindergarten-enrollment-activity-workbench/
 
 **1. 看一份完整示例**
 
-直接双击打开 `examples/*.html`，可离线阅读、Ctrl+P 打印或存 PDF；黄色高亮为待填/待核实处。
+直接双击打开 `examples/*.html`，可离线阅读、Ctrl+P 打印或存 PDF；高亮处为待填/待核实项。
 
 **2. 生成一份骨架**
 
@@ -75,6 +76,9 @@ python scripts/scaffold_plan.py --title "2027 春季排期" --window 春季 --ki
 # 外联资源建档
 python scripts/scaffold_plan.py --title "某社区活动中心" --kind resource
 
+# 有线下现场环节的单场，另出执行手册骨架（步骤 SOP＋当天 checklist＋速查表）
+python scripts/scaffold_plan.py --title "社区亲子坊" --kind manual --mode 走出去 --layer P1 --window 长期蓄水 --goal 留资
+
 # 初始化两张底座表（先试 Excel，缺 openpyxl 自动落 MD）
 python scripts/init_tables.py --out ./tables_out
 
@@ -85,10 +89,14 @@ python scripts/scaffold_plan.py --title "社区亲子坊" --format md
 **3. 填充后自检**
 
 ```powershell
+# 单文件结构校验 + 红线检测
 python scripts/check_plan.py examples/<方案卡>.md
+
+# 目录级产物齐套检查：方案卡 HTML/MD 底稿/执行手册是否缺件
+python scripts/check_deliverables.py ./本场目录
 ```
 
-退出码：0 通过（可含警告）；1 有错误；2 文件读取失败。
+退出码：0 通过（可含警告）；1 有错误；2 文件读取失败。线上蓄水/纯物料植入等无需手册的情形，在方案卡标注「手册豁免＋原因」即可跳过手册检查。
 
 **4. 渲染 HTML**
 
