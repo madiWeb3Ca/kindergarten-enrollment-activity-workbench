@@ -261,8 +261,19 @@ def main():
     try:
         doc = render_markdown(md)
         out = args.out or os.path.splitext(args.path)[0] + ".html"
-        with open(out, "w", encoding="utf-8") as f:
-            f.write(doc)
+        out_dir = os.path.dirname(os.path.abspath(out))
+        os.makedirs(out_dir, exist_ok=True)
+        try:
+            with open(out, "w", encoding="utf-8") as f:
+                f.write(doc)
+        except OSError:
+            # 写入失败回滚：删掉可能已产生的半截文件，避免留下损坏产物
+            if os.path.exists(out):
+                try:
+                    os.remove(out)
+                except OSError:
+                    pass
+            raise
     except OSError as e:
         print(f"[错误] 输出文件写入失败：{e}", file=sys.stderr)
         return 2
