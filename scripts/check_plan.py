@@ -28,8 +28,11 @@ REQUIRED_SECTIONS = [
     ("复盘与回流", r"^\s*#+\s*.*(复盘|回流|回头看|存下下次)"),
 ]
 
-# 产物类型识别：单场方案卡 / 系列排期表 / 资源建档骨架
-def detect_kind(text):
+# 产物类型识别：单场方案卡 / 执行手册 / 系列排期表 / 资源建档骨架
+def detect_kind(text, path=""):
+    base = os.path.basename(path) if path else ""
+    if "执行手册" in base or "执行手册" in text[:200]:
+        return "manual"
     if "排期表" in text:
         return "series"
     if "外联资源建档" in text:
@@ -129,7 +132,7 @@ def main():
         text = html_to_text(text)
 
     errors, warnings = [], []
-    kind = detect_kind(text)
+    kind = detect_kind(text, args.path)
 
     # 1. 章节齐全（仅单场方案卡；排期表/资源建档走各自模板）
     bodies = {}
@@ -180,6 +183,28 @@ def main():
         if lead_body and re.search(r"活码|表单|留资|邀约码", lead_body):
             if not re.search(r"场次编码|场次编号|\d{4}Q\d", text):
                 warnings.append("留资线索建议挂场次编码（YYYYQX-场所简称-序号），便于归因到具体场次")
+
+        # 2f. 缺主动抓手/亮点动作（软警告：方案只有环节罗列，缺推荐动作或创意亮点）
+        if not re.search(r"首选动作|稳妥备选|亮点|创意|超预期", text):
+            warnings.append("方案卡建议补一段推荐动作/本场亮点（首选动作、稳妥备选、超预期亮点），避免只有环节罗列")
+
+        # 2g. 缺临场应变兜底指针（软警告：未挂突发场景分支）
+        if not re.search(r"应变|兜底分支|contingency|突发状况|突发场景", text):
+            warnings.append("方案卡建议挂临场应变兜底指针，对照应变库高频条目预读本场最可能遇到的分支")
+
+        # 2h. 异业/联动场缺供需交换象限（软警告：先盘双方供需再定分工）
+        if re.search(r"异业|联动|外部机构", text) and not re.search(r"供需|我方需求|对方供给", text):
+            warnings.append("异业/联动场建议先补供需交换象限（我方需求/对方需求/我方供给/对方供给→匹配判断→档位），再写分工与创意")
+
+        # 2i. P4 超长周期场默认派人（软警告：应走轻型物料/线上蓄水档）
+        if re.search(r"P4", text) and re.search(r"派人|到场|3\s*人|半天", text) and not re.search(r"轻型|物料植入|赞助|线上蓄水", text):
+            warnings.append("P4 超长周期渠道建议走轻型物料植入或线上蓄水档，不默认派人到场")
+
+    # 2h. 执行手册最小骨架（软检查：六阶段＋速查表是否在位）
+    if kind == "manual":
+        for needle in ["对接定场", "定方案", "通知与工具", "备课物料", "当天执行", "跟进与复盘", "速查表"]:
+            if needle not in text:
+                warnings.append(f"执行手册建议补「{needle}」阶段或附表")
 
     # 3. 承诺性红线
     for pat in PROMISE_PATTERNS:
