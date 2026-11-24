@@ -25,6 +25,7 @@ MANUAL_KEY = "执行手册"
 SERIES_KEY = "排期表"
 RESOURCE_KEY = "资源建档"
 EXEMPT_MARK = "手册豁免"
+MD_EXEMPT_MARK = "底稿豁免"
 
 
 def html_to_text(src):
@@ -110,11 +111,18 @@ def main():
             print(f"  ✗ {e}")
         return 1
 
-    # 读方案卡文本，判断手册豁免
+    # 读方案卡文本，并合并目录内说明文件（如 _归档说明.md），判断手册/底稿豁免
     card_text = ""
     for f in cards_html + cards_md:
         card_text += read_text(f)
-    exempt = EXEMPT_MARK in card_text
+    extra_text = ""
+    for name in os.listdir(target):
+        full = os.path.join(target, name)
+        if os.path.isfile(full) and name.lower().endswith(".md") and full not in cards_md:
+            extra_text += read_text(full)
+    all_text = card_text + extra_text
+    exempt = EXEMPT_MARK in all_text
+    md_exempt = MD_EXEMPT_MARK in all_text
 
     print(f"=== 产物齐套检查：{target} ===")
     if cards_html:
@@ -124,6 +132,8 @@ def main():
 
     if cards_md:
         notes.append(f"方案卡 MD 底稿：{os.path.basename(cards_md[0])}")
+    elif md_exempt:
+        notes.append("已标注「底稿豁免」：历史件以方案卡 HTML 为权威，不要求同骨架 MD 底稿")
     else:
         warnings.append("缺方案卡 .md 底稿（版本库比对/回流底版，建议补）")
 
@@ -133,6 +143,22 @@ def main():
         notes.append("方案卡已标注「手册豁免」，按线上蓄水/纯物料植入等情形跳过手册检查")
     else:
         warnings.append("缺执行手册 HTML；有线下现场环节的单场活动应出步骤 SOP 手册（六阶段＋当天 checklist＋速查表）；如属线上蓄水/纯物料植入，请在方案卡标注「手册豁免＋原因」")
+
+    # MD/HTML 同步检查：同名配对，底稿晚于网页版说明 HTML 未随 MD 重渲染（软告警，不阻断）
+    html_by_stem = {os.path.splitext(os.path.basename(f))[0]: f for f in cards_html}
+    md_by_stem = {os.path.splitext(os.path.basename(f))[0]: f for f in cards_md}
+    for stem, md_path in md_by_stem.items():
+        html_path = html_by_stem.get(stem)
+        if not html_path:
+            continue
+        try:
+            if os.path.getmtime(md_path) > os.path.getmtime(html_path) + 1:
+                warnings.append(
+                    f"底稿晚于网页版：{stem}.md 比 .html 新，HTML 可能未随 MD 重渲染；"
+                    "请用 render_html.py 从最新 MD 重新生成网页版"
+                )
+        except OSError:
+            pass
 
     for n in notes:
         print(f"  · {n}")
