@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.4.1
+version: 1.4.2
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，主动推荐动作与创意、跨行业借鉴策略、临场突发应变分支，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, 活动策划, 创意借鉴, HTML]
@@ -120,7 +120,7 @@ description: "策划、落表、复盘幼儿园招生与社区外联活动。核
 
 ### 第⑦步 回头看效果
 
-攒到链路第二场（园内体验/探园）后两场合并复盘；单场不急于下结论。当天先记原始记录防记忆衰减；复盘三问：断在哪一环、家长反馈什么、哪里要改。见 `references/review-loop.md`。
+攒到链路第二场（园内体验/探园）后两场合并复盘；单场不急于下结论。当天先记原始记录防记忆衰减；复盘三问：断在哪一环、家长反馈什么、哪里要改。再次进入产出型入口（办新一场／排系列期／记资源建档）时，先召回上一场未闭环档案，轻量补齐后段数据与反馈；纯翻旧报告、查历史档案等回看不打扰。见 `references/review-loop.md`。
 
 ### 第⑧步 存下下次再用
 
@@ -227,7 +227,7 @@ python scripts/check_deliverables.py ./本场目录    # 目录级产物齐套�
 - `references/contingency-playbook.md`——临场突发应变分支库：五组场景、六层接法（触发/即时/转圜/红线/记录/顺势加分）、回流回填规则
 - `references/plan-framework.md`——第④⑤步：九要素方案骨架、筹备倒排 SOP、当天执行 checklist、量力校验表、降级预案
 - `references/lead-capture.md`——第⑥步：两码分工、现场三分支、离场后跟进 SOP、字段瘦身映射、落表规则、漏斗指标
-- `references/review-loop.md`——第⑦⑧步：复盘三问、回流去向、两表归属、分级规则
+- `references/review-loop.md`——第⑦⑧步：复盘三问、再次进入回填触发、回流去向、两表归属、分级规则
 - `references/red-lines.md`——红线清单、事实检索规则、隐私与合规边界
 - `references/glossary.md`——统一术语表：三模式、P0–P4 年龄层与场地分级、两套活动分类、场所类型/接洽状态/合作方式枚举、投入四档、两码三分支、主目标与红线口径的唯一取值
 - `references/faq.md`——常见问题集中答疑：入口人群、两码留资、方案原型、周边候选取数、数据边界
