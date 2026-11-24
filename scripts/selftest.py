@@ -18,6 +18,7 @@ SCAFFOLD = os.path.join(HERE, "scaffold_plan.py")
 CHECK = os.path.join(HERE, "check_plan.py")
 RENDER = os.path.join(HERE, "render_html.py")
 INIT = os.path.join(HERE, "init_tables.py")
+DELIVER = os.path.join(HERE, "check_deliverables.py")
 SKILL_MD = os.path.join(HERE, "..", "SKILL.md")
 
 
@@ -180,7 +181,8 @@ def main():
         with open(out, "r", encoding="utf-8") as f:
             content = f.read()
         sections = ["先定招谁", "现成样子", "搭出本场", "物料", "掂量",
-                    "风险预案", "推荐动作", "当天怎么留", "回头看"]
+                    "风险预案", "推荐动作", "当天怎么留", "回头看",
+                    "供需交换象限", "投入档位", "赠品"]
         ok = all(s in content for s in sections)
         r = run([sys.executable, CHECK, out])
         ok = ok and r.returncode != 2
@@ -270,6 +272,80 @@ def main():
         ok = False
     results.append(case("9 底座表初始化（Excel/MD 兜底）通过", ok,
                         (r.stderr[:200] or r_md.stderr[:200])))
+
+    # 用例 10：执行手册骨架生成，六阶段与速查表齐全
+    man_out = os.path.join(tmp, "社区亲子坊_执行手册.md")
+    r = run([sys.executable, SCAFFOLD, "--title", "社区亲子坊", "--kind", "manual",
+             "--mode", "走出去", "--layer", "P1", "--window", "长期蓄水", "--goal", "留资",
+             "--format", "md", "--out", man_out])
+    ok = r.returncode == 0 and os.path.exists(man_out)
+    if ok:
+        with open(man_out, "r", encoding="utf-8") as f:
+            man_text = f.read()
+        sections = ["对接定场", "定方案", "通知与工具", "备课物料", "当天执行",
+                    "跟进与复盘", "速查表"]
+        ok = all(s in man_text for s in sections)
+    results.append(case("10 执行手册骨架生成且六阶段齐全", ok, r.stderr[:200]))
+
+    # 用例 10b：手册过单文件校验，不误报方案卡专属段落缺失
+    r10b = run([sys.executable, CHECK, man_out])
+    ok10b = r10b.returncode == 0 and "缺少必需段落" not in r10b.stdout
+    results.append(case("10b 手册校验不误报方案卡缺段", ok10b, r10b.stdout[-200:]))
+
+    # 用例 11：目录级产物齐套检查（齐套 / 缺手册告警 / 豁免跳过 / 模式 B 不误报）
+    def _touch(dirname, fname, content=""):
+        d = os.path.join(tmp, dirname)
+        os.makedirs(d, exist_ok=True)
+        p = os.path.join(d, fname)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(content)
+        return d
+
+    # 11a 齐套：方案卡 HTML＋MD＋执行手册 HTML
+    d_full = _touch("deliver_full", "方案卡.html")
+    _touch("deliver_full", "方案卡.md")
+    _touch("deliver_full", "执行手册.html")
+    r = run([sys.executable, DELIVER, d_full])
+    ok = r.returncode == 0 and "产物齐套" in r.stdout
+    results.append(case("11a 齐套目录通过检查", ok, r.stdout[-200:]))
+
+    # 11b 现场场缺手册：应出警告但不阻断
+    d_noman = _touch("deliver_nomanual", "方案卡.html")
+    _touch("deliver_nomanual", "方案卡.md")
+    r = run([sys.executable, DELIVER, d_noman])
+    ok = r.returncode == 0 and "缺执行手册" in r.stdout
+    results.append(case("11b 缺执行手册给出警告", ok, r.stdout[-200:]))
+
+    # 11c 标注手册豁免：跳过手册检查（方案卡 HTML/MD 仍在）
+    d_exempt = _touch("deliver_exempt", "方案卡.html")
+    _touch("deliver_exempt", "方案卡.md", "手册豁免：纯线上蓄水场，无线下现场环节")
+    r = run([sys.executable, DELIVER, d_exempt])
+    ok = r.returncode == 0 and "缺执行手册" not in r.stdout and "手册豁免" in r.stdout
+    results.append(case("11c 手册豁免标注后跳过手册检查", ok, r.stdout[-200:]))
+
+    # 11d 模式 B 排期表：不误报手册/底稿缺失
+    d_series = _touch("deliver_series", "2027春季排期表.md")
+    r = run([sys.executable, DELIVER, d_series])
+    ok = r.returncode == 0 and "不要求执行手册" in r.stdout
+    results.append(case("11d 排期表不误报现场场缺件", ok, r.stdout[-200:]))
+
+    # 11e 异业/联动场缺供需象限：出软警告（不阻断；必备段齐全，returncode 0）
+    cross_md = os.path.join(tmp, "异业缺供需.md")
+    with open(cross_md, "w", encoding="utf-8") as f:
+        f.write(GOOD + "\n- 本场为异业合作场，与周边机构联合筹备。\n")
+    r = run([sys.executable, CHECK, cross_md])
+    ok = r.returncode == 0 and "供需交换象限" in r.stdout
+    results.append(case("11e 异业场缺供需象限给软警告", ok, r.stdout[-200:]))
+
+    # 11f P4 超长周期场默认派人：出软警告（不阻断；必备段齐全，returncode 0）
+    p4_text = GOOD.replace("P1 2.5–3 岁", "P4 0–1.5 岁").replace(
+        "中教、外教、答疑、登记协助各 1", "派 3 人到场办活动")
+    p4_md = os.path.join(tmp, "p4派人.md")
+    with open(p4_md, "w", encoding="utf-8") as f:
+        f.write(p4_text)
+    r = run([sys.executable, CHECK, p4_md])
+    ok = r.returncode == 0 and "轻型物料植入或线上蓄水" in r.stdout
+    results.append(case("11f P4 场默认派人给软警告", ok, r.stdout[-200:]))
 
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
