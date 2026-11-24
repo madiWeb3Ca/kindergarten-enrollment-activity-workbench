@@ -2,7 +2,7 @@
 name: enrollment-activity-workbench
 slug: kindergarten-enrollment-activity-workbench
 displayName: 幼儿园招生活动工作台
-version: 1.4.2
+version: 1.4.4
 
 summary: 按八步思考路径带园所策划招生与社区外联活动，主动推荐动作与创意、跨行业借鉴策略、临场突发应变分支，产出可落地的活动方案卡、留资留痕方案与复盘回流记录；默认交付单文件 HTML 方案卡
 tags: [幼儿园, 招生活动, 社区外联, 异业合作, 留资复盘, 资源库, 活动策划, 创意借鉴, HTML]
@@ -234,8 +234,8 @@ python scripts/check_deliverables.py ./本场目录    # 目录级产物齐套�
 - `references/publish-checklist.md`——TRACE 五维发布前检查清单、双版剥离与见证留痕要求
 - `tables/activity-archive.md`——活动档案表字段骨架 v1
 - `tables/outreach-resource.md`——外联资源库表字段骨架 v1
-- `examples/community-parent-child.md`——完整示例：某社区亲子坊走出去＋园内体验课两场链路（通用演示示例，待核项占位）
-- `examples/mall-pop-up.md`——完整示例：某商场周末快闪体验角（流动客流循环制，区别于社区场；通用演示示例，待核项占位）
+- `examples/community-parent-child.md`——完整示例：社区亲子场走出去＋园内体验课两场链路（通用演示示例，待核项占位）
+- `examples/mall-pop-up.md`——完整示例：商场周末快闪体验角（流动客流循环制，区别于社区场；通用演示示例，待核项占位）
 - `scripts/scaffold_plan.py`——按入口卡生成骨架：`--kind single` 方案卡／`manual` 执行手册／`series` 排期表／`resource` 资源建档（默认出 HTML，`--format md` 出底稿）
 - `scripts/init_tables.py`——初始化两张底座表：在线表之外的本地兜底，`--format xlsx` 出本地 Excel、`--format md` 出表结构文本
 - `scripts/render_html.py`——把方案卡 Markdown 渲染成单文件 HTML
