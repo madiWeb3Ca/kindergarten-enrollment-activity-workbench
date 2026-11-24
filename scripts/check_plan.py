@@ -39,11 +39,21 @@ def detect_kind(text, path=""):
         return "resource"
     return "single"
 
-# 承诺性表述（红线，出现即错误）
+# 承诺结果/录取保证（红线，出现即错误）
 PROMISE_PATTERNS = [
-    r"保证招满", r"保证报名", r"转化率\s*\d+\s*%", r"招满\s*\d+",
-    r"提升营收\s*\d+", r"曝光\s*\d+\s*%", r"报名人数\s*\d+\s*人",
-    r"保证到场", r"百分百", r"100%\s*报名",
+    r"保证招满", r"保证报名", r"保证到场", r"保证录取", r"保证进",
+    r"包录取", r"包直升", r"包过",
+    r"转化率\s*\d+\s*%", r"招满\s*\d+", r"提升营收\s*\d+", r"曝光\s*\d+\s*%",
+    r"报名人数\s*\d+\s*人", r"百分百", r"100%\s*报名", r"100%\s*录取",
+    r"稳招", r"抢报一空",
+]
+
+# 绝对化最高级/稀缺逼单/虚假口碑/利益诱导（软警告；否定与边界说明语境排除）
+SOFT_MARKETING_PATTERNS = [
+    r"排名第一", r"全网第一", r"口碑第一", r"最好的", r"最优", r"最强", r"顶级",
+    r"最受欢迎", r"好评如潮", r"零差评", r"100%\s*好评", r"名额仅剩", r"名额不多",
+    r"最后\s*\d+\s*席", r"名额紧张", r"限时抢购", r"限时优惠", r"分销返利",
+    r"转介绍提成", r"拉人头返利",
 ]
 
 # 入口未清信号
@@ -57,7 +67,9 @@ EXTRA_FIELDS = ["出生日期", "性别", "参与人姓名"]
 
 # 否定/排除语境：出现在这些语境里不算违规
 NEGATIVE_HINTS = ["不进", "不属于", "在读", "增值服务", "另收费", "不打包",
-                  "留到", "不追", "回访", "阶段补", "不收集", "不写进", "剔除"]
+                  "留到", "不追", "回访", "阶段补", "不收集", "不写进", "剔除",
+                  "不搞", "不设", "不买", "不排", "不做", "别", "勿", "禁止",
+                  "替代", "对照", "不接", "不安排", "不承诺", "不攀比"]
 
 
 def in_negative_context(line, patterns):
@@ -211,6 +223,13 @@ def main():
         m = re.search(pat, text)
         if m:
             errors.append(f"出现承诺性表述：「{m.group(0)}」；指标只记过程事实，不承诺结果")
+
+    # 3b. 绝对化/逼单/虚假背书/利益诱导（软警告；逐行排除否定与边界说明语境）
+    for line in text.splitlines():
+        for pat in SOFT_MARKETING_PATTERNS:
+            m = re.search(pat, line)
+            if m and not in_negative_context(line, SOFT_MARKETING_PATTERNS):
+                warnings.append(f"出现营销敏感表述：「{m.group(0)}」；避免绝对化最高级、稀缺逼单、虚假口碑与利益诱导，只讲可查证事实")
 
     # 4. 入口未清
     for pat in ALL_FAMILY_PATTERNS:
