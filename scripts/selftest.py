@@ -347,6 +347,47 @@ def main():
     ok = r.returncode == 0 and "轻型物料植入或线上蓄水" in r.stdout
     results.append(case("11f P4 场默认派人给软警告", ok, r.stdout[-200:]))
 
+    # 用例 12：新增硬承诺词（包录取/保证进）必须被错误拦截
+    promise_text = GOOD + "\n- 当场承诺包录取、保证进园名额。\n"
+    promise_md = os.path.join(tmp, "硬承诺新词.md")
+    with open(promise_md, "w", encoding="utf-8") as f:
+        f.write(promise_text)
+    r = run([sys.executable, CHECK, promise_md])
+    ok = r.returncode == 1 and "包录取" in r.stdout
+    results.append(case("12 新增硬承诺词被错误拦截", ok, r.stdout[-200:]))
+
+    # 用例 13：绝对化/逼单/虚假口碑词出软警告但不阻断（returncode 0）
+    soft_text = GOOD + "\n- 名额仅剩最后 5 席，家长好评如潮。\n"
+    soft_md = os.path.join(tmp, "营销敏感词.md")
+    with open(soft_md, "w", encoding="utf-8") as f:
+        f.write(soft_text)
+    r = run([sys.executable, CHECK, soft_md])
+    ok = r.returncode == 0 and "营销敏感表述" in r.stdout
+    results.append(case("13 营销敏感词给软警告不阻断", ok, r.stdout[-200:]))
+
+    # 用例 14：资源建档骨架用新接洽状态枚举，不含旧值（未接洽/已接洽）
+    res2 = os.path.join(tmp, "资源建档2.md")
+    r = run([sys.executable, SCAFFOLD, "--title", "某妇幼机构", "--kind", "resource",
+             "--format", "md", "--out", res2])
+    ok = r.returncode == 0 and os.path.exists(res2)
+    if ok:
+        with open(res2, "r", encoding="utf-8") as f:
+            res_text = f.read()
+        ok = ("未对接" in res_text and "未接洽" not in res_text
+              and "已接洽" not in res_text)
+    results.append(case("14 资源骨架接洽状态枚举为新值", ok, r.stderr[:200]))
+
+    # 用例 15：examples 目录下全部官方示例方案卡校验 0 错误（可含软警告）
+    ex_dir = os.path.join(HERE, "..", "examples")
+    ex_ok = True
+    last_out = ""
+    ex_files = [f for f in os.listdir(ex_dir) if f.endswith(".md")] if os.path.isdir(ex_dir) else []
+    for fn in ex_files:
+        r = run([sys.executable, CHECK, os.path.join(ex_dir, fn)])
+        ex_ok = ex_ok and r.returncode == 0
+        last_out = r.stdout[-200:]
+    results.append(case("15 官方示例校验无错误", ex_ok and bool(ex_files), last_out))
+
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
 
