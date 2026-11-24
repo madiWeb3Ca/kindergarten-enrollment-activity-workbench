@@ -52,6 +52,8 @@ ARCHIVE = {
         {"name": "改进项", "kind": "文本", "options": [], "note": "下次改哪一句、换哪个环节/物料"},
         {"name": "复盘日期", "kind": "日期", "options": [], "note": "正式复盘一般在链路第二场后"},
         {"name": "方案卡链接", "kind": "链接/附件", "options": [], "note": "HTML 方案卡挂本行或单独导出"},
+        {"name": "本场创新动作/借鉴来源", "kind": "文本", "options": [], "note": "外来打法或自创亮点；标注借鉴行业/来源；无则留空"},
+        {"name": "创新动作反馈标签", "kind": "多选/文本", "options": ["跑成", "一般", "未跑成"], "note": "附过程事实反馈；下场是否复用；不填主观推断"},
     ],
 }
 
@@ -60,14 +62,14 @@ RESOURCE = {
     "fields": [
         {"name": "场所编码", "kind": "文本", "options": [], "note": "全场唯一，关联活动档案表"},
         {"name": "名称", "kind": "文本", "options": [], "note": "社区/物业/商场/机构等全称"},
-        {"name": "类型", "kind": "单选", "options": ["居委会", "物业", "商场", "亲子机构", "公园", "医院", "其他"], "note": ""},
+        {"name": "类型", "kind": "单选", "options": ["居委会", "物业", "商场", "亲子机构", "公园", "医院", "妇幼母婴机构", "儿童医疗健康机构", "其他"], "note": ""},
         {"name": "地址", "kind": "文本", "options": [], "note": "公开可查地址；待核留占位"},
         {"name": "距离车程", "kind": "文本", "options": [], "note": "直线距离/实测车程；车程待实测标注"},
         {"name": "来源", "kind": "单选", "options": ["POI种子", "在读家庭推荐", "老带新", "曾走访"], "note": ""},
         {"name": "对接人", "kind": "文本", "options": [], "note": "合作方联系人；未知留空不编"},
         {"name": "职务", "kind": "文本", "options": [], "note": ""},
         {"name": "联系方式", "kind": "文本", "options": [], "note": "电话/微信，受控保存"},
-        {"name": "接洽状态", "kind": "单选", "options": ["未接洽", "已接洽", "已合作", "暂缓"], "note": ""},
+        {"name": "接洽状态", "kind": "单选", "options": ["未对接", "初步接触", "已对接", "已合作", "暂缓"], "note": ""},
         {"name": "合作方式", "kind": "多选", "options": ["驻点走出去", "联办请进来", "物料互放", "包场"], "note": ""},
         {"name": "费用", "kind": "文本/占位", "options": [], "note": "场地费等；待确认不编"},
         {"name": "容量", "kind": "文本", "options": [], "note": "可容纳家庭组数/人数"},
@@ -122,7 +124,15 @@ def write_xlsx(tables, out_path):
         # 一行占位，便于使用者识别填写位置
         ws.append(["【待填】"] * len(headers))
         ws.freeze_panes = "A2"
-    wb.save(out_path)
+    try:
+        wb.save(out_path)
+    except OSError:
+        if os.path.exists(out_path):
+            try:
+                os.remove(out_path)
+            except OSError:
+                pass
+        raise
     return True, out_path
 
 
@@ -146,8 +156,16 @@ def write_md(tables, out_path):
             "> 在线多维表格不可用、Excel 也生成不了时使用；按以下表头建表，单选/多选选项见各字段说明。", ""]
     for t in tables:
         body.append(_md_table(t))
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(body))
+    try:
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(body))
+    except OSError:
+        if os.path.exists(out_path):
+            try:
+                os.remove(out_path)
+            except OSError:
+                pass
+        raise
     return True, out_path
 
 
