@@ -388,6 +388,33 @@ def main():
         last_out = r.stdout[-200:]
     results.append(case("15 官方示例校验无错误", ex_ok and bool(ex_files), last_out))
 
+    # 用例 16：再次进入回填触发规则在各篇挂钩一致（触发口径/未闭环/召回小卡/术语/FAQ）
+    def _read(rel):
+        p = os.path.join(HERE, "..", rel)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                return f.read()
+        except OSError:
+            return ""
+
+    checks = {
+        "SKILL.md": ["未闭环", "纯翻旧报告"],
+        "references/review-loop.md": ["未闭环判定", "纯回看", "最小集"],
+        "references/coaching-scripts.md": ["召回小卡", "待核实"],
+        "references/proactive-playbook.md": ["未闭环"],
+        "references/glossary.md": ["再次进入回填触发"],
+        "references/faq.md": ["Q24"],
+    }
+    doc_ok = True
+    doc_detail = ""
+    for rel, keys in checks.items():
+        text = _read(rel)
+        missing = [k for k in keys if k not in text]
+        if missing:
+            doc_ok = False
+            doc_detail = f"{rel} 缺 {missing}"
+    results.append(case("16 回填触发规则各篇挂钩一致", doc_ok, doc_detail))
+
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
 
