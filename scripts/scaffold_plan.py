@@ -34,7 +34,7 @@ LAYERS = {
 }
 WINDOWS = ["秋季", "春季", "长期蓄水"]
 MODES = ["走出去", "请进来", "线上"]
-PLACES = ["居委会", "物业", "商场", "亲子机构", "公园", "医院", "其他"]
+PLACES = ["居委会", "物业", "商场", "亲子机构", "公园", "医院", "妇幼母婴机构", "儿童医疗健康机构", "其他"]
 GOALS = ["留资", "品牌"]
 KINDS = ["single", "manual", "series", "resource"]
 
@@ -238,7 +238,7 @@ RESOURCE = """# {title} · 外联资源建档
 | 项 | 内容 | 状态 |
 |---|---|---|
 | 名称 | 【待填：全称】 | 待核实 |
-| 类型 | 【待填：居委会/物业/商场/亲子机构/公园/医院/其他】 | — |
+| 类型 | 【待填：居委会/物业/商场/亲子机构/公园/医院/妇幼母婴机构/儿童医疗健康机构/其他】 | — |
 | 地址 | 【待填：公开可查地址】 | 待核实 |
 | 距离车程 | 【待填：直线距离/实测车程】 | 待核实 |
 | 来源 | 【待填：POI 种子/在读家庭推荐/老带新/曾走访】 | — |
@@ -249,7 +249,7 @@ RESOURCE = """# {title} · 外联资源建档
 |---|---|
 | 对接人/职务 | 【待填】 |
 | 联系方式 | 【待填：受控保存】 |
-| 接洽状态 | 【待填：未接洽/已接洽/已合作/暂缓】 |
+| 接洽状态 | 【待填：未对接/初步接触/已对接/已合作/暂缓】 |
 | 合作方式 | 【待填：驻点走出去/联办请进来/物料互放/包场】 |
 
 ## 场地条件
@@ -419,8 +419,17 @@ def main():
     try:
         os.makedirs(out_dir, exist_ok=True)
         payload = render_markdown(content) if args.format == "html" else content
-        with open(out, "w", encoding="utf-8") as f:
-            f.write(payload)
+        try:
+            with open(out, "w", encoding="utf-8") as f:
+                f.write(payload)
+        except OSError:
+            # 写入失败回滚：删掉可能已产生的半截文件
+            if os.path.exists(out):
+                try:
+                    os.remove(out)
+                except OSError:
+                    pass
+            raise
     except OSError as e:
         print(f"[错误] 输出文件写入失败：{e}", file=sys.stderr)
         return 2
