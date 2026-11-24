@@ -52,21 +52,16 @@ GOOD = """# 社区亲子坊（示例）
 |---|---|---|---|
 | 师资 | 中教、外教可出场 | 中教带读＋外教 10 分钟手指谣 | 【待核实：档期】 |
 
-## 三、找个现成样子
-
-- 参考样子：社区亲子绘本坊
-- 本场变形点：低龄安静环节，分段答疑
-
-## 三补、推荐动作与本场亮点
-
-- 首选动作：绘本共读打底，旁观位开放给犹豫家庭
-- 超预期亮点：孩子作品自愿留影；对照应变库高频条目预读临场分支
-
-## 四、手里有什么（周边）
+## 三、手里有什么（周边）
 
 | 项 | 口径 | 状态 |
 |---|---|---|
 | 场地 | 社区活动中心室内 | 【待核实：容量】 |
+
+## 四、找个现成样子
+
+- 参考样子：社区亲子绘本坊
+- 本场变形点：低龄安静环节，分段答疑
 
 ## 五、搭出本场方案
 
@@ -82,14 +77,12 @@ GOOD = """# 社区亲子坊（示例）
 - 园所出：老师、内容、物料、留资码、登记
 - 合作方出：场地、通知、协助
 
-## 七、掂量够不够做
+## 七、掂量够不够做（缺口清单）
 
-| 维度 | 状态 | 缺口处置 |
+| 维度 | 状态 | 待补缺口 |
 |---|---|---|
 | 人手 | 现成 | 中教、外教、答疑、登记协助各 1 |
 | 留资工具 | 待核 | 纸质兜底先行 |
-
-能不能做：补缺口后可执行
 
 ## 八、预算（占位待核）
 
@@ -101,8 +94,14 @@ GOOD = """# 社区亲子坊（示例）
 - 超员：报名设上限
 - 留资自愿：不强迫填写
 - 口径合规：不贬同行、不编事实
+- 降级预案：人手不足改中教安静律动；场地不达标缩规模或换期
 
-## 十、当天怎么留线索
+## 十、推荐动作与本场亮点
+
+- 首选动作：绘本共读打底，旁观位开放给犹豫家庭
+- 超预期亮点：孩子作品自愿留影；对照应变库高频条目预读临场分支
+
+## 十一、当天怎么留线索
 
 | 码 | 用途 | 何时扫 |
 |---|---|---|
@@ -111,10 +110,14 @@ GOOD = """# 社区亲子坊（示例）
 
 现场只收：孩子称呼、月龄段、家长称呼、电话或微信、意向勾选。
 
-## 十一、回头看与存下下次用
+## 十二、回头看与存下下次用
 
 - 复盘三问：断在哪一环；家长反馈什么；哪里要改。
 - 存到资源库与原型配方。
+
+## 十三、待核实清单
+
+- 【待核实：场地容量、档期、伴手礼单价、对接人】
 """
 
 BAD = """# 社区招生活动
@@ -347,6 +350,24 @@ def main():
     ok = r.returncode == 0 and "轻型物料植入或线上蓄水" in r.stdout
     results.append(case("11f P4 场默认派人给软警告", ok, r.stdout[-200:]))
 
+    # 11g MD 晚于 HTML：同步告警（软警告，不阻断）
+    import time
+    d_stale = _touch("deliver_stale", "方案卡.html", "方案卡内容")
+    _touch("deliver_stale", "方案卡.md", "方案卡底稿")
+    md_stale = os.path.join(d_stale, "方案卡.md")
+    later = time.time() + 10
+    os.utime(md_stale, (later, later))
+    r = run([sys.executable, DELIVER, d_stale])
+    ok = r.returncode == 0 and "底稿晚于网页版" in r.stdout
+    results.append(case("11g 底稿晚于网页版给同步告警", ok, r.stdout[-200:]))
+
+    # 11h 同步件：HTML 与 MD 同建，不误报网页版滞后
+    d_sync = _touch("deliver_sync", "方案卡.html", "方案卡内容")
+    _touch("deliver_sync", "方案卡.md", "方案卡底稿")
+    r = run([sys.executable, DELIVER, d_sync])
+    ok = r.returncode == 0 and "底稿晚于网页版" not in r.stdout
+    results.append(case("11h 同步件不误报网页版滞后", ok, r.stdout[-200:]))
+
     # 用例 12：新增硬承诺词（包录取/保证进）必须被错误拦截
     promise_text = GOOD + "\n- 当场承诺包录取、保证进园名额。\n"
     promise_md = os.path.join(tmp, "硬承诺新词.md")
@@ -414,6 +435,87 @@ def main():
             doc_ok = False
             doc_detail = f"{rel} 缺 {missing}"
     results.append(case("16 回填触发规则各篇挂钩一致", doc_ok, doc_detail))
+
+    # 用例 17：原型章前置引用第六章“第 N 站”站点编号 → 软警告（不阻断）
+    fwd_text = GOOD.replace("参考样子：社区亲子绘本坊",
+                            "参考样子：社区亲子绘本坊；第2站设为摊位任务点")
+    fwd_md = os.path.join(tmp, "前置引用.md")
+    with open(fwd_md, "w", encoding="utf-8") as f:
+        f.write(fwd_text)
+    r = run([sys.executable, CHECK, fwd_md])
+    ok = r.returncode == 0 and "站点编号" in r.stdout
+    results.append(case("17 原型章前置引用站点编号给软警告", ok, r.stdout[-200:]))
+
+    # 用例 18：风险预案前下可行性结论 → 软警告（不阻断）
+    concl_text = GOOD.replace("纸质兜底先行", "纸质兜底先行\n能不能做：补缺口后可执行")
+    concl_md = os.path.join(tmp, "结论前置.md")
+    with open(concl_md, "w", encoding="utf-8") as f:
+        f.write(concl_text)
+    r = run([sys.executable, CHECK, concl_md])
+    ok = r.returncode == 0 and "可行性结论应放在" in r.stdout
+    results.append(case("18 风险前下可行性结论给软警告", ok, r.stdout[-200:]))
+
+    # 用例 19：同一章两张独立表渲染后各自成表，不合并、表头不串进另一表表体
+    two_md = os.path.join(tmp, "双表.md")
+    two_html = os.path.join(tmp, "双表.html")
+    with open(two_md, "w", encoding="utf-8") as f:
+        f.write(
+            "# 双表测试\n\n"
+            "**场次编码**：【待填：X】　**日期/时段**：周末\n"
+            "**场地**：测试场　**主干模式**：走出去　**场所类型**：公园\n"
+            "**主攻年龄层**：P0　**决策窗口**：秋季　**主目标**：留资为主\n\n"
+            "## 六、搭出本场方案\n\n"
+            "### 1. 第一张表\n\n"
+            "| 站点 | 动作 |\n|---|---|\n| 甲 | 动作 A |\n\n"
+            "### 2. 第二张表\n\n"
+            "| 时段 | 要点 |\n|---|---|\n| 乙 | 要点 B |\n"
+        )
+    r = run([sys.executable, RENDER, two_md, "-o", two_html])
+    ok = r.returncode == 0 and os.path.exists(two_html)
+    if ok:
+        with open(two_html, "r", encoding="utf-8") as f:
+            doc = f.read()
+        tables = re.findall(r"<table>.*?</table>", doc, re.S)
+        ok = (
+            len(tables) == 2
+            and "站点" in tables[0]
+            and "时段" not in tables[0]
+            and "时段" in tables[1]
+            and "未填写" not in doc
+        )
+    results.append(case("19 同一章两张表独立成表不合并", ok, r.stdout[-200:]))
+
+    # 用例 20：原型章同业依据混入内容传播指标（三平台/官方号/点赞）→ 软警告（不阻断）
+    metric_text = GOOD.replace(
+        "参考样子：社区亲子绘本坊",
+        "参考样子：社区亲子绘本坊\n- 三平台调研：官方号点赞高、收藏多，据此安排活动"
+    )
+    metric_md = os.path.join(tmp, "内容传播词.md")
+    with open(metric_md, "w", encoding="utf-8") as f:
+        f.write(metric_text)
+    r = run([sys.executable, CHECK, metric_md])
+    ok = r.returncode == 0 and "内容传播指标" in r.stdout
+    results.append(case("20 同业依据混入内容传播词给软警告", ok, r.stdout[-200:]))
+
+    # 用例 21：原型章出现内容传播词但在否定语境（不做硬广）→ 不误报
+    neg_text = GOOD.replace(
+        "参考样子：社区亲子绘本坊",
+        "参考样子：社区亲子绘本坊\n- 不看官方号点赞数据，不做硬广"
+    )
+    neg_md = os.path.join(tmp, "否定语境.md")
+    with open(neg_md, "w", encoding="utf-8") as f:
+        f.write(neg_text)
+    r = run([sys.executable, CHECK, neg_md])
+    ok = r.returncode == 0 and "内容传播指标" not in r.stdout
+    results.append(case("21 否定语境不误报内容传播词", ok, r.stdout[-200:]))
+
+    # 用例 22：历史件目录只有方案卡 HTML＋归档说明（底稿/手册豁免）→ 不提示缺 MD/手册
+    _touch("deliver_hist", "方案卡.html", "方案卡内容")
+    _touch("deliver_hist", "_归档说明.md", "底稿豁免；手册豁免：历史件以 HTML 为权威")
+    r = run([sys.executable, DELIVER, os.path.join(tmp, "deliver_hist")])
+    ok = (r.returncode == 0 and "缺方案卡 .md 底稿" not in r.stdout
+          and "缺执行手册" not in r.stdout and "产物齐套" in r.stdout)
+    results.append(case("22 历史件豁免不提示缺底稿手册", ok, r.stdout[-200:]))
 
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
