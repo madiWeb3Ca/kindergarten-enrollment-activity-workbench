@@ -29,7 +29,7 @@ kindergarten-enrollment-activity-workbench/
 │   ├── contingency-playbook.md # 临场应变分支库：五组场景、六层接法、顺势加分动作
 │   ├── plan-framework.md       # 第④⑤步：方案骨架、筹备倒排、当天 checklist、量力校验、降级预案
 │   ├── lead-capture.md         # 第⑥步：两码分工、表单规格、跟进 SOP、归因映射、漏斗指标
-│   ├── review-loop.md          # 第⑦⑧步：复盘三问、回流去向、分级规则
+│   ├── review-loop.md          # 第⑦⑧步：复盘三问、录入时点、回流去向、分级规则
 │   ├── red-lines.md            # 红线、事实检索、隐私合规与能力边界
 │   ├── faq.md                  # 常见问题集中答疑
 │   └── publish-checklist.md    # TRACE 五维发布前检查清单
@@ -42,7 +42,7 @@ kindergarten-enrollment-activity-workbench/
 ├── scripts/
 │   ├── scaffold_plan.py        # 生成骨架：single 方案卡 / manual 执行手册 / series 排期表 / resource 建档
 │   ├── init_tables.py          # 初始化两张底座表：在线表之外的本地兜底（xlsx / md）
-│   ├── render_html.py          # 方案卡 Markdown → 单文件 HTML
+│   ├── render_html.py          # Markdown 产物 → 单文件 HTML（按类型配页眉文案）
 │   ├── check_plan.py           # 单文件结构校验与红线检测（.md / .html 双通道）
 │   ├── check_deliverables.py   # 目录级产物齐套检查：方案卡 HTML/MD 底稿/执行手册缺件告警
 │   └── selftest.py              # 冒烟测试用例
