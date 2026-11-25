@@ -227,7 +227,7 @@ def main():
     if ok:
         with open(series_out, "r", encoding="utf-8") as f:
             content = f.read()
-        ok = "排期一览" in content
+        ok = "阶段策略大表" in content and "周历创意表" in content
         r2 = run([sys.executable, CHECK, series_out])
         ok = ok and r2.returncode == 0
     results.append(case("7 模式 B 排期表骨架通过校验", ok,
@@ -260,7 +260,9 @@ def main():
             names = [ws.title for ws in wb.worksheets]
             archive = next(ws for ws in wb.worksheets if ws.title == "活动档案表")
             resource = next(ws for ws in wb.worksheets if ws.title == "外联资源库表")
-            ok = ok and len(names) == 2 and archive.max_column == 26 and resource.max_column == 22
+            archive_headers = [c.value for c in archive[1]]
+            ok = (ok and len(names) == 2 and archive.max_column == 27 and resource.max_column == 22
+                  and "年龄段" in archive_headers and "年龄层编号" in archive_headers)
         except ImportError:
             ok = ok and os.path.exists(md_path)
     else:
@@ -516,6 +518,45 @@ def main():
     ok = (r.returncode == 0 and "缺方案卡 .md 底稿" not in r.stdout
           and "缺执行手册" not in r.stdout and "产物齐套" in r.stdout)
     results.append(case("22 历史件豁免不提示缺底稿手册", ok, r.stdout[-200:]))
+
+    # 用例 23：类型识别加固——同义词/文件名命中；方案卡正文泛指“存到资源库”不误判 resource
+    sys.path.insert(0, HERE)
+    from check_plan import detect_kind as ck_kind
+    from render_html import detect_kind as rh_kind
+
+    ident_cases = [
+        ("series", ck_kind("# 春季周历创意表\n\n- 周历安排", "春季周历.md")),
+        ("series", rh_kind("# 春季周历创意表", "春季周历.md")),
+        ("resource", ck_kind("# 某场地资源库表\n", "场地.md")),
+        ("resource", rh_kind("# 某场地资源库表", "场地.md")),
+        ("manual", ck_kind("# 某场 · 执行手册\n", "手册.md")),
+        ("single", ck_kind("# 社区亲子坊\n\n## 一、先定招谁\n- 结论存到资源库与原型配方", "社区亲子坊.md")),
+        ("single", rh_kind("# 社区亲子坊\n\n存到资源库", "社区亲子坊.md")),
+    ]
+    ident_ok = all(got == want for want, got in ident_cases)
+    results.append(case("23 类型识别加固：同义词命中、泛指不误判", ident_ok,
+                        str(ident_cases)))
+
+    # 用例 24：渲染 HTML 按产物类型区分页眉与标题后缀（正文引用产物名“方案卡”不算误标）
+    series_html = os.path.join(tmp, "春季排期.html")
+    r = run([sys.executable, RENDER, series_out, "-o", series_html])
+    ok = r.returncode == 0 and os.path.exists(series_html)
+    if ok:
+        with open(series_html, "r", encoding="utf-8") as f:
+            s_doc = f.read()
+        ok = ('<div class="eyebrow">幼儿园招生活动工作台 · 招生季排期表</div>' in s_doc
+              and "· 排期表</title>" in s_doc)
+    res_html = os.path.join(tmp, "资源建档.html")
+    r = run([sys.executable, RENDER, res_out, "-o", res_html])
+    if r.returncode == 0 and os.path.exists(res_html):
+        with open(res_html, "r", encoding="utf-8") as f:
+            res_doc = f.read()
+        ok = ok and ('<div class="eyebrow">幼儿园招生活动工作台 · 外联资源建档</div>' in res_doc
+                     and "· 资源建档</title>" in res_doc)
+    else:
+        ok = False
+    results.append(case("24 渲染按类型区分页眉文案", ok,
+                        (r.stdout[-200:] if r.stdout else r.stderr[:200:])))
 
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
