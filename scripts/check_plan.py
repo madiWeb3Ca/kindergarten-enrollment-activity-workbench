@@ -48,13 +48,25 @@ STANDARD_SECTION_ORDER = [
 ]
 
 # 产物类型识别：单场方案卡 / 执行手册 / 系列排期表 / 资源建档骨架
+# 只看文件名与开头标题/头部信息，避免正文里“存到资源库”等泛指把方案卡误判成资源建档。
+MANUAL_KEYS = ["执行手册"]
+SERIES_KEYS = ["排期表", "系列排期", "招生季排期", "季度排期", "周历", "活动节奏",
+               "排期一览", "周历创意"]
+RESOURCE_KEYS = ["资源建档", "外联资源", "资源库表", "场地表", "场所档案"]
+
+
 def detect_kind(text, path=""):
     base = os.path.basename(path) if path else ""
-    if "执行手册" in base or "执行手册" in text[:200]:
+    head = text[:200]
+
+    def hit(keys):
+        return any(k in base or k in head for k in keys)
+
+    if hit(MANUAL_KEYS):
         return "manual"
-    if "排期表" in text:
+    if hit(SERIES_KEYS):
         return "series"
-    if "外联资源建档" in text:
+    if hit(RESOURCE_KEYS):
         return "resource"
     return "single"
 
