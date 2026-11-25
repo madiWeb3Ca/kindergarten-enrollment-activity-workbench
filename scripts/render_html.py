@@ -29,6 +29,37 @@ def inline(text):
 
 # ---------- 解析 ----------
 
+# 产物类型识别口径与 check_plan.py 对齐；只看文件名与开头标题，避免正文泛指误判。
+MANUAL_KEYS = ["执行手册"]
+SERIES_KEYS = ["排期表", "系列排期", "招生季排期", "季度排期", "周历", "活动节奏",
+               "排期一览", "周历创意"]
+RESOURCE_KEYS = ["资源建档", "外联资源", "资源库表", "场地表", "场所档案"]
+
+# kind -> (页眉 eyebrow, <title> 后缀)
+KIND_LABEL = {
+    "single": ("幼儿园招生活动工作台 · 方案卡", "· 招生活动方案卡"),
+    "manual": ("幼儿园招生活动工作台 · 执行手册", "· 执行手册"),
+    "series": ("幼儿园招生活动工作台 · 招生季排期表", "· 排期表"),
+    "resource": ("幼儿园招生活动工作台 · 外联资源建档", "· 资源建档"),
+}
+
+
+def detect_kind(text, filename=""):
+    base = os.path.basename(filename) if filename else ""
+    head = text[:200]
+
+    def hit(keys):
+        return any(k in base or k in head for k in keys)
+
+    if hit(MANUAL_KEYS):
+        return "manual"
+    if hit(SERIES_KEYS):
+        return "series"
+    if hit(RESOURCE_KEYS):
+        return "resource"
+    return "single"
+
+
 def parse(md):
     title = None
     meta = []
@@ -207,7 +238,9 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid var(--line);font-si
 """
 
 
-def build_html(title, meta, sections):
+def build_html(title, meta, sections, eyebrow=None, suffix=None):
+    eyebrow = eyebrow or KIND_LABEL["single"][0]
+    suffix = suffix or KIND_LABEL["single"][1]
     meta_html = "".join(
         f"<span><strong>{html.escape(k)}</strong>{inline(v)}</span>" for k, v in meta
     )
@@ -220,14 +253,14 @@ def build_html(title, meta, sections):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html.escape(title)} · 招生活动方案卡</title>
+<title>{html.escape(title)} {suffix}</title>
 <style>{CSS}</style>
 </head>
 <body>
 <div class="toolbar"><button onclick="window.print()">打印 / 存 PDF</button></div>
 <main class="sheet">
   <header>
-    <div class="eyebrow">幼儿园招生活动工作台 · 方案卡</div>
+    <div class="eyebrow">{html.escape(eyebrow)}</div>
     <h1>{html.escape(title)}</h1>
     <div class="meta">{meta_html}</div>
   </header>
@@ -242,9 +275,11 @@ def build_html(title, meta, sections):
 """
 
 
-def render_markdown(md_text):
+def render_markdown(md_text, filename=""):
     title, meta, sections = parse(md_text)
-    return build_html(title, meta, sections)
+    kind = detect_kind(md_text, filename)
+    eyebrow, suffix = KIND_LABEL[kind]
+    return build_html(title, meta, sections, eyebrow, suffix)
 
 
 def main():
@@ -275,7 +310,7 @@ def main():
         return 2
 
     try:
-        doc = render_markdown(md)
+        doc = render_markdown(md, args.path)
         out = args.out or os.path.splitext(args.path)[0] + ".html"
         out_dir = os.path.dirname(os.path.abspath(out))
         os.makedirs(out_dir, exist_ok=True)
