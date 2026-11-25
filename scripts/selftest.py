@@ -556,7 +556,7 @@ def main():
     else:
         ok = False
     results.append(case("24 渲染按类型区分页眉文案", ok,
-                        (r.stdout[-200:] if r.stdout else r.stderr[:200:])))
+                        (r.stdout[-200:] if r.stdout else r.stderr[:200])))
 
     print(f"\n=== {sum(results)}/{len(results)} 用例通过 ===")
     return 0 if all(results) else 1
